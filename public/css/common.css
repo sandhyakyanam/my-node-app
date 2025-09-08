@@ -1,0 +1,43 @@
+/* Reset body margin to avoid gaps */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;              /* ensure full height */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Fixed header */
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #007bff;
+    color: white;
+    padding: 15px;
+    z-index: 1000;
+  }
+  
+  /* Fixed footer */
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #f1f1f1;
+    padding: 10px;
+    text-align: center;
+    z-index: 1000;
+  }
+  
+
+  .main-container {
+    margin-top: 136px;   /* 👈 push content below fixed header (adjust to header height) */
+    margin-bottom: 60px; /* 👈 avoid overlap with footer */
+    padding: 20px;
+    flex: 1;            /* take available height */
+    background: #fafafa;
+    overflow-y: auto;   /* scrollable if content is long */
+  }
