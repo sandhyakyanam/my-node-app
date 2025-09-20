@@ -1,4 +1,8 @@
 const userModel = require('../models/userModel');
+const bcrypt = require('bcrypt');
+require('dotenv').config();
+const jwt = require('jsonwebtoken');
+
 
 async function getuserInfo(req,res)
 {
@@ -14,13 +18,18 @@ async function getuserInfo(req,res)
 async function signUpUser(req,res)
 {
     try{
+        const salt = await bcrypt.genSalt();
+        var password = req.body.password;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
         userdata = {
             firstname : req.body.firstname,
             lastname : req.body.lastname,
             email : req.body.email,
-            password : req.body.password,
+            password : hashedPassword,
             status : req.body.status
         }
+
         const insertUser = await userModel.insertUser(userdata);
         if((insertUser.insertId) > 0)
         {
@@ -108,4 +117,56 @@ async function getUserById(req,res)
      console.log('Something went wrong while getting the user details',err);
    }
 }
-module.exports = { getuserInfo ,signUpUser, editUser, deleteUser, getUserById};   
+async function checkUser(req, res) {
+    try {
+        const { email, password } = req.body;
+
+        if (email && password) {
+            const getUserResult = await userModel.getuserLoginInfo(email);
+
+            if (!getUserResult || getUserResult.length === 0) {
+                return res.status(404).json({
+                    message: "Email Not Found"
+                });
+            }
+
+            const isMatch = await bcrypt.compare(password, getUserResult[0].password);
+
+            console.log("Password match:", isMatch);
+
+            if (!isMatch) {
+                return res.status(401).json({
+                    message: "Invalid credentials"
+                });
+            } 
+            const token = jwt.sign(
+                { id:getUserResult[0].id, email: email},
+                process.env.JWT_SECRET_KEY
+            )
+            res.json({
+                message : 'Login Successfully',
+                token : token
+            })
+        } else {
+            return res.status(400).json({
+                message: "Email and password are required"
+            });
+        }
+
+    } catch (err) {
+        console.error('Something went wrong with the login', err);
+        return res.status(500).json({ message: "Server error" });
+    }
+
+}
+async function getuserProfile(req,res) {
+    try{
+       console.log(req.user);
+    }catch(err)
+    {
+        console.log('Something went wrong with the login',err);
+        return res.status(500).json({message: 'Server error'});
+    }
+}
+
+module.exports = { getuserInfo ,signUpUser, editUser, deleteUser, getUserById, checkUser,getuserProfile};   
