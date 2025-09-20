@@ -72,11 +72,22 @@ async function getUserDetailById(id)
       throw err;
   }
 }
+async function getuserLoginInfo(email) {
+   try{
+      const [rows] = await db.query("SELECT email,password,id from users where email = ?",[email]);
+      return rows;
+   }
+   catch(err){
+    throw err;
+   }
+  
+}
 module.exports = {
     getUserDetails ,
     insertUser,
     checkExistuser,
     editUserDetails,
     deleteUserById,
-    getUserDetailById
+    getUserDetailById,
+    getuserLoginInfo
 }
