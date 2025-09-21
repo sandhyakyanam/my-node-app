@@ -82,6 +82,27 @@ async function getuserLoginInfo(email) {
    }
   
 }
+async function getUserProfileById(id,email)
+{
+   try{
+    const [rows] = await db.query(
+      "SELECT * FROM users WHERE email = ? AND id = ?",
+      [email, id]
+    );
+    return rows;
+   }catch(err)
+   {
+    throw err;
+   }
+}
+async function insertFileName(filename,id) {
+  try{
+    const [rows] = await db.query("INSERT INTO user_files (file_path,user_id) VALUES (? , ? )",[filename,id]);
+    return rows;
+  }catch(err){
+    throw err;
+  }
+}
 module.exports = {
     getUserDetails ,
     insertUser,
@@ -89,5 +110,7 @@ module.exports = {
     editUserDetails,
     deleteUserById,
     getUserDetailById,
-    getuserLoginInfo
+    getuserLoginInfo,
+    getUserProfileById,
+    insertFileName
 }

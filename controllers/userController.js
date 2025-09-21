@@ -2,7 +2,45 @@ const userModel = require('../models/userModel');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 
+
+async function sendMail(req,res)
+{
+    let testAccount = await nodemailer.createTestAccount();
+    const transporter = nodemailer.createTransport({
+        port:465,
+        host:"smtp.gmail.com",
+        auth: {
+            user: testAccount.user,
+            pass: testAccount.pass,
+            },
+    });
+    const {to , subject,text} = req.body;
+    const mailData = {
+    from : 'kyanamsandhya77@gmail.com',
+    to: to,
+    subject: subject,
+    text: text,
+    html:'<h1>Dummy Test Email</h1>',
+
+    };
+    transporter.sendMail(mailData,(error,info)=>{
+     if(error)
+     {
+         return res.status(400).json({
+             message : "Something went wrong while sending the email",
+             err:error
+         });
+     }else{
+        return res.status(400).json({
+            status : 200,
+            message : "Mail send successfully",
+            info : info
+        });
+     }
+  })
+}
 
 async function getuserInfo(req,res)
 {
@@ -161,12 +199,62 @@ async function checkUser(req, res) {
 }
 async function getuserProfile(req,res) {
     try{
-       console.log(req.user);
+       if(req.user)
+       { 
+        userId = req.user.id;
+        email = req.user.email;
+        const getUserExistsId = await userModel.getUserProfileById(userId,email); 
+        if(getUserExistsId)
+        {
+           userDetails = {
+            firstname : getUserExistsId[0].firstname,
+            lastname : getUserExistsId[0].lastname,
+            email : getUserExistsId[0].email
+           }
+           res.status(200).json({
+             message: 'User Details Found Successfully',
+             userDetails : userDetails
+           }) 
+        }else{
+            res.status(500).json({
+                message: 'No User Exists',
+              })  
+        }
+       }
+       
     }catch(err)
     {
         console.log('Something went wrong with the login',err);
         return res.status(500).json({message: 'Server error'});
     }
 }
+async function insertUserFile(req,res)
+{
 
-module.exports = { getuserInfo ,signUpUser, editUser, deleteUser, getUserById, checkUser,getuserProfile};   
+    try{
+       if(req.file && req.user)
+       { 
+          const filename = req.file.filename;
+          const userid = req.user.id;
+          const getFileData = await userModel.insertFileName(filename,userid);
+          if(getFileData.insertId)
+          { 
+             res.status(200).json({
+                message : 'File Uploaded Successfully'
+             })
+          }else{
+            res.status(500).json({
+                message : 'File Has Not Uploaded Successfully'
+             })
+          }
+       }
+    }catch(err)
+    {
+       console.log(err);
+       req.status().json({
+         messgae : 'Not uploaded Successfully',
+         err : err.message
+       })
+    }
+}
+module.exports = { sendMail, getuserInfo ,signUpUser, editUser, deleteUser, getUserById, checkUser,getuserProfile, insertUserFile};   
